@@ -1,0 +1,959 @@
+/* ---------------------------------------------------------------------------
+   Cardyshub — supplementary stylesheet
+   ---------------------------------------------------------------------------
+   This file is loaded directly (not through Vite) because this machine has no
+   Node toolchain, so `resources/css/app.css` cannot be recompiled. Everything
+   here is either a rule Tailwind cannot express as a utility (media queries,
+   keyframes, :has) or a utility that is missing from the currently compiled
+   stylesheet.
+
+   When Node is available again, most of this can move into app.css / the
+   Tailwind config and this file can shrink to just the keyframes and the
+   component classes.
+   --------------------------------------------------------------------------- */
+
+/* ---------- 1. Smooth scrolling ---------- */
+
+html {
+    scroll-behavior: smooth;
+    /* Anchor targets clear the sticky header. */
+    scroll-padding-top: 5.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
+
+/* ---------- 2. Hero: stop the content clipping on small screens ----------
+   The slides used `position:absolute; inset:0`, so the container height was
+   fixed and any content taller than it was silently cut off — at 320px both
+   hero CTAs were invisible. Stacking the slides in a single CSS grid cell lets
+   the active slide's content set the height, with min-height as the floor. */
+
+.hero-stack {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 620px;
+}
+
+.hero-slide {
+    grid-area: 1 / 1;
+    min-width: 0;
+}
+
+.hero-grid { padding-top: 2rem; padding-bottom: 2rem; }
+
+.hero-media { height: 38vh; }
+
+/* Smaller headline and tighter rhythm on narrow phones, so the hero fits
+   without the copy turning into a wall. */
+@media (max-width: 400px) {
+    .hero-slide h1 { font-size: 2.25rem; line-height: 1.05; }
+    .hero-slide .hero-copy > * { margin-bottom: 0.75rem; }
+}
+
+/* On short viewports the photo takes less of the fold. */
+@media (max-height: 700px) and (max-width: 1023px) {
+    .hero-media { height: 30vh; }
+}
+
+@media (min-width: 640px) {
+    .hero-media { height: 46vh; }
+}
+
+/* From lg the photo goes full-bleed behind the copy, so the fixed viewport
+   height is safe again — the grid no longer has to contain a stacked column. */
+@media (min-width: 1024px) {
+    .hero-stack { height: 92vh; max-height: 840px; }
+    .hero-grid { padding-top: 0; padding-bottom: 0; }
+    .hero-media { height: 68vh; }
+}
+
+/* ---------- 3. Buttons: pill radius and a lift on hover ---------- */
+
+.btn {
+    border-radius: 100px;
+    transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease,
+                transform 180ms ease, box-shadow 180ms ease;
+    will-change: transform;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(20, 6, 14, 0.06), 0 16px 40px rgba(20, 6, 14, 0.10);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Buttons and link-buttons that use the bare `rounded` utility get the same
+   radius floor. Scoped to button/a on purpose: `rounded` is also on checkboxes
+   and text inputs, and a 100px radius would turn those into circles. */
+button.rounded,
+a.rounded,
+.qty-control { border-radius: 100px; }
+
+/* Secondary button sitting on a dark or saturated background. */
+.btn-on-dark {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.btn-on-dark:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.26) !important;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn, .btn:hover:not(:disabled) { transform: none; transition: background-color 180ms ease; }
+}
+
+/* ---------- 4. Touch targets ----------
+   Coarse pointers only, so the desktop layout keeps its tighter rhythm.
+   44px is the WCAG 2.5.5 / iOS HIG minimum. */
+
+@media (pointer: coarse) {
+    /* inline-flex matters: min-height/min-width do nothing on a default-inline
+       <a>, which is what most of these icon links are. */
+    .btn,
+    .tap-target,
+    .social-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Text links that should grow their hit area without changing how they look. */
+    .tap-inline,
+    .breadcrumb a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    /* Quantity steppers landed a pixel under the minimum. */
+    .qty-control button,
+    [aria-label="Decrease quantity"],
+    [aria-label="Increase quantity"] {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Icon-only controls get their hit area from padding, not a bigger visual. */
+    .tap-pad { position: relative; }
+    .tap-pad::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 44px;
+        height: 44px;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* ---------- 5. Sticky header, condensed on scroll ---------- */
+
+[data-site-header] {
+    transition: box-shadow 200ms ease, background-color 200ms ease;
+}
+
+[data-site-header] .site-header-bar {
+    transition: height 220ms ease;
+}
+
+[data-site-header] .site-header-logo {
+    transition: height 220ms ease;
+}
+
+[data-site-header].is-condensed .site-header-bar {
+    height: 3.25rem;
+}
+
+[data-site-header].is-condensed .site-header-logo {
+    height: 1.75rem;
+}
+
+@media (min-width: 640px) {
+    [data-site-header].is-condensed .site-header-bar { height: 3.75rem; }
+    [data-site-header].is-condensed .site-header-logo { height: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-site-header] .site-header-bar,
+    [data-site-header] .site-header-logo { transition: none; }
+}
+
+/* ---------- 6. WhatsApp floating widget ---------- */
+
+.wa-widget {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.75rem;
+    border-radius: 100px;
+    background: #25D366;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(20, 6, 14, 0.18);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.wa-widget:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(20, 6, 14, 0.24);
+}
+
+.wa-widget svg { width: 26px; height: 26px; display: block; }
+
+.wa-widget-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding-right: 0.375rem;
+    white-space: nowrap;
+}
+
+/* Label is a nicety on desktop; on phones the mark alone keeps the thumb zone clear. */
+@media (max-width: 639px) {
+    .wa-widget-label { display: none; }
+    .wa-widget { padding: 0.875rem; right: 0.875rem; bottom: 0.875rem; }
+}
+
+/* Gentle attention pulse, once the page has settled. */
+@keyframes wa-pulse {
+    0%, 100% { box-shadow: 0 6px 16px rgba(20, 6, 14, 0.18), 0 0 0 0 rgba(37, 211, 102, 0.5); }
+    50% { box-shadow: 0 6px 16px rgba(20, 6, 14, 0.18), 0 0 0 12px rgba(37, 211, 102, 0); }
+}
+
+.wa-widget.is-ready { animation: wa-pulse 3s ease-out 3; }
+
+@media (prefers-reduced-motion: reduce) {
+    .wa-widget.is-ready { animation: none; }
+    .wa-widget:hover { transform: none; }
+}
+
+/* ---------- 7. Newsletter gradient ---------- */
+
+.newsletter-gradient {
+    background:
+        radial-gradient(circle at 12% 20%, rgba(255, 216, 77, 0.35) 0, rgba(255, 216, 77, 0) 45%),
+        radial-gradient(circle at 88% 15%, rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0) 40%),
+        radial-gradient(circle at 75% 90%, rgba(196, 3, 80, 0.55) 0, rgba(196, 3, 80, 0) 55%),
+        linear-gradient(135deg, #FA0467 0%, #D6045C 45%, #8E0F52 100%);
+}
+
+/* ---------- 8. Reviews: continuous auto-scroll ----------
+   A duplicated track translated by exactly -50% loops seamlessly. Width is
+   driven by the flex children, so it adapts to however many reviews exist. */
+
+.reviews-viewport {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.reviews-track {
+    display: flex;
+    width: max-content;
+    animation: reviews-scroll 42s linear infinite;
+}
+
+.reviews-viewport:hover .reviews-track,
+.reviews-viewport:focus-within .reviews-track {
+    animation-play-state: paused;
+}
+
+.reviews-card {
+    width: 18rem;
+    flex: 0 0 auto;
+    margin-right: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .reviews-card { width: 22rem; margin-right: 1.5rem; }
+}
+
+@keyframes reviews-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reviews-track { animation: none; }
+    .reviews-viewport { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
+}
+
+/* ---------- 8b. About page ----------
+   The founder section deliberately avoids the plain photo-left / copy-right
+   split: the portrait sits in an arch with an offset outline behind it, and the
+   pull quote breaks out of the image on a raised card. */
+
+.about-hero {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(255, 204, 224, 0.55) 0, rgba(255, 204, 224, 0) 50%),
+        radial-gradient(circle at 85% 10%, rgba(255, 216, 77, 0.25) 0, rgba(255, 216, 77, 0) 45%),
+        linear-gradient(160deg, #FFF0F6 0%, #FFF7F3 60%, #FAF7F5 100%);
+}
+
+/* Numbered belief cards */
+.belief-card { position: relative; overflow: hidden; }
+
+.belief-card .belief-number {
+    position: absolute;
+    top: -0.5rem;
+    right: 0.5rem;
+    font-size: 5rem;
+    line-height: 1;
+    font-weight: 700;
+    color: rgba(250, 4, 103, 0.07);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* --- Founder --- */
+
+.founder-band {
+    background:
+        radial-gradient(circle at 80% 15%, rgba(255, 240, 246, 0.9) 0, rgba(255, 240, 246, 0) 55%),
+        linear-gradient(180deg, #FFFFFF 0%, #FFF7FA 100%);
+}
+
+.founder-figure {
+    position: relative;
+    max-width: 26rem;
+    margin: 0 auto;
+}
+
+/* The offset outline below sticks out 1.25rem to the right. On a phone the
+   figure is full-bleed inside the gutter, so narrow it by exactly that much or
+   the outline pushes the document wider than the viewport. */
+@media (max-width: 639px) {
+    .founder-figure {
+        width: calc(100% - 1.25rem);
+        margin-left: 0;
+        margin-right: auto;
+    }
+}
+
+/* Offset outline sitting behind the portrait. */
+.founder-figure::before {
+    content: '';
+    position: absolute;
+    inset: 1.25rem -1.25rem -1.25rem 1.25rem;
+    border: 1px solid #FFCCE0;
+    border-radius: 999px 999px 12px 12px;
+    pointer-events: none;
+}
+
+.founder-photo {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: center 22%;
+    border-radius: 999px 999px 12px 12px;
+    background: #FFF0F6;
+}
+
+/* Small badge riding the top-left of the arch. */
+.founder-badge {
+    position: absolute;
+    top: 1rem;
+    left: -0.5rem;
+    z-index: 2;
+    background: #14060E;
+    color: #FAF7F5;
+    border-radius: 100px;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* The pull quote card breaking out over the portrait's lower edge. */
+.founder-quote {
+    position: relative;
+    z-index: 2;
+    margin: -2.5rem 0 0 0;
+    background: #FFFFFF;
+    border: 1px solid #EADFE4;
+    border-radius: 12px;
+    padding: 1.5rem 1.5rem 1.25rem;
+    box-shadow: 0 4px 8px rgba(20, 6, 14, 0.06), 0 16px 40px rgba(20, 6, 14, 0.10);
+}
+
+.founder-quote::before {
+    content: '\201C';
+    display: block;
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 3.5rem;
+    line-height: 0.6;
+    color: #FA0467;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+    .founder-figure { margin: 0; }
+    /* Pull the card out to the right so it overlaps both the photo and the
+       start of the copy column. */
+    .founder-quote { margin: -3.5rem -3rem 0 2rem; }
+}
+
+/* Signature */
+.founder-signature {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 2rem;
+    line-height: 1.1;
+    color: #14060E;
+}
+
+/* Large standalone pull quote closing the section */
+.founder-statement {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-size: clamp(1.75rem, 4.5vw, 3rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+/* ---------- 9. Footer social marks ---------- */
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.social-link:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+}
+
+.social-link svg { width: 1.125rem; height: 1.125rem; }
+
+/* Same mark on a light background (contact page). */
+.social-link-light { border-color: #EADFE4; }
+
+.social-link-light:hover {
+    border-color: #FFCCE0;
+    background: #FFF0F6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .social-link:hover { transform: none; }
+}
+
+/* ---------- 8c. Policy pages ---------- */
+
+/* Unfilled placeholder in a legal page. Loud on purpose. */
+.policy-tbc {
+    background: #FFF3CD;
+    color: #7A5C00;
+    border: 1px dashed #E6BC20;
+    border-radius: 4px;
+    padding: 0 0.375rem;
+    font-size: 0.875em;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Draft banner shown while any required policy value is outstanding. */
+.policy-draft {
+    background: #FFF3CD;
+    border: 1px solid #E6BC20;
+    border-radius: 12px;
+    color: #5C4600;
+}
+
+/* Long-form legal copy. app.css has no typography plugin compiled, so the
+   rhythm for these pages is set here instead. */
+/* min-width:0 matters: as a grid item this defaults to min-width:auto, so a
+   wide table or a long unbreakable token (__stripe_mid) stretches the column
+   past the viewport instead of scrolling inside its own box. */
+.policy-prose {
+    color: #6B5A63;
+    line-height: 1.7;
+    min-width: 0;
+    overflow-wrap: break-word;
+}
+.policy-prose > * + * { margin-top: 1rem; }
+.policy-prose h2 {
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: #14060E;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    scroll-margin-top: 7rem;
+}
+.policy-prose h3 {
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 1.125rem;
+    color: #14060E;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+}
+.policy-prose strong { color: #14060E; font-weight: 600; }
+.policy-prose a { color: #FA0467; text-decoration: underline; }
+.policy-prose ul { list-style: disc; padding-left: 1.25rem; }
+.policy-prose ol { list-style: decimal; padding-left: 1.25rem; }
+.policy-prose li + li { margin-top: 0.375rem; }
+.policy-prose table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.policy-prose th, .policy-prose td {
+    text-align: left;
+    padding: 0.75rem 0.875rem;
+    border-bottom: 1px solid #EADFE4;
+    vertical-align: top;
+}
+.policy-prose th { color: #14060E; font-weight: 600; background: #FFF0F6; white-space: nowrap; }
+.policy-prose code {
+    font-family: 'Space Grotesk', ui-monospace, monospace;
+    font-size: 0.875em;
+    background: #FAF7F5;
+    border: 1px solid #EADFE4;
+    border-radius: 4px;
+    padding: 0.0625rem 0.3125rem;
+}
+
+/* Tables must scroll inside their own box rather than widening the page. */
+.policy-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.policy-table-scroll table { min-width: 30rem; }
+
+.policy-prose code { overflow-wrap: anywhere; }
+
+/* Sticky in-page contents for the long legal pages. */
+@media (min-width: 1024px) {
+    .policy-toc { position: sticky; top: 7rem; }
+}
+
+/* ---------- 8d. FAQ page ----------
+   The sidebar contents list is gone; these styles carry the structure instead,
+   so 26 questions read as grouped cards rather than one flat stack. */
+
+.faq-group {
+    background: #FFFFFF;
+    border: 1px solid #EADFE4;
+    border-radius: 12px;
+    overflow: hidden;
+    scroll-margin-top: 7rem;
+}
+
+.faq-group + .faq-group { margin-top: 1.25rem; }
+
+.faq-group-head {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1.125rem 1.25rem;
+    background: linear-gradient(90deg, #FFF0F6 0%, #FFFFFF 70%);
+    border-bottom: 1px solid #EADFE4;
+}
+
+.faq-group-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 auto;
+    border-radius: 100px;
+    background: #FFFFFF;
+    border: 1px solid #FFCCE0;
+    color: #FA0467;
+}
+
+.faq-group-icon svg { width: 1.125rem; height: 1.125rem; }
+
+.faq-group-title {
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 1.125rem;
+    color: #14060E;
+    line-height: 1.2;
+}
+
+.faq-count {
+    margin-left: auto;
+    font-family: 'Space Grotesk', ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7A6875;
+    white-space: nowrap;
+}
+
+.faq-item + .faq-item { border-top: 1px solid #EADFE4; }
+
+.faq-q {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    min-height: 44px;
+    text-align: left;
+    font-weight: 500;
+    color: #14060E;
+    transition: background-color 150ms ease;
+}
+
+.faq-q:hover { background: #FFF8FB; }
+
+.faq-q svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 auto;
+    color: #6B5A63;
+    transition: transform 200ms ease;
+    margin-top: 0.125rem;
+}
+
+.faq-q[aria-expanded="true"] svg { transform: rotate(180deg); }
+.faq-q[aria-expanded="true"] { color: #FA0467; }
+
+.faq-a {
+    padding: 0 1.25rem 1.125rem;
+    color: #6B5A63;
+    line-height: 1.7;
+    font-size: 0.9375rem;
+}
+
+.faq-a a { color: #FA0467; text-decoration: underline; }
+.faq-a p + p { margin-top: 0.75rem; }
+
+/* Search field on the FAQ hero */
+.faq-search::placeholder { color: #7A6875; }
+
+/* Long support addresses must not widen the card. */
+.faq-group + div a span { overflow-wrap: anywhere; }
+
+/* ---------- 9b. Payment word marks ---------- */
+
+.pay-mark {
+    display: inline-flex;
+    align-items: center;
+    height: 1.75rem;
+    padding: 0 0.625rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(250, 247, 245, 0.75);
+    white-space: nowrap;
+}
+
+/* ---------- 10. Slider dots: visible size stays small, hit area does not ---------- */
+
+.slider-dot {
+    position: relative;
+}
+
+.slider-dot::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+}
+
+/* ---------- 11. Navigation preloader ----------
+   A hairline bar in the brand pink, pinned above everything including the
+   sticky header. site.js adds `is-active` the moment a click or a submit
+   starts a real page load; it needs no hide step, because the bar leaves with
+   the document it belongs to. The width keyframes ease towards 96% and stop —
+   a progress bar that reaches 100% before the page arrives reads as a lie. */
+
+.nav-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 110;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+
+.nav-progress.is-active {
+    opacity: 1;
+}
+
+.nav-progress-bar {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #FA0467 0%, #C40350 100%);
+    box-shadow: 0 0 8px rgba(250, 4, 103, 0.45);
+}
+
+.nav-progress.is-active .nav-progress-bar {
+    animation: nav-progress 14s cubic-bezier(0.12, 0.72, 0.28, 1) forwards;
+}
+
+@keyframes nav-progress {
+    0% { width: 0; }
+    10% { width: 32%; }
+    35% { width: 62%; }
+    65% { width: 82%; }
+    100% { width: 96%; }
+}
+
+/* Static bar rather than a crawling one, but still clearly present. */
+@media (prefers-reduced-motion: reduce) {
+    .nav-progress { transition: none; }
+    .nav-progress.is-active .nav-progress-bar { animation: none; width: 100%; }
+}
+
+/* ---------- 12. Count badges on the header icons ----------
+   Always in the markup so site.js only ever changes their text, and hidden
+   outright at zero so an empty bag says nothing to a screen reader either. */
+
+.count-badge.is-empty {
+    display: none;
+}
+
+.count-badge.is-bumped {
+    animation: badge-bump 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes badge-bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.45); }
+    100% { transform: scale(1); }
+}
+
+/* ---------- 13. Toast stack ----------
+   The container for the toasts site.js raises after an AJAX cart or wishlist
+   reply. Same card treatment as the Blade toast component, stacked so two in
+   quick succession do not sit on top of each other. */
+
+.toast-stack {
+    position: fixed;
+    z-index: 60;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+@media (min-width: 640px) {
+    .toast-stack {
+        top: auto;
+        left: auto;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 24rem;
+        max-width: calc(100vw - 3rem);
+    }
+}
+
+.site-toast {
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(0.375rem);
+    transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.site-toast.is-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.site-toast.is-leaving {
+    opacity: 0;
+    transform: translateY(0.25rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-toast { transition: none; }
+}
+
+/* ---------- 14. Wishlist hearts ----------
+   The saved state is expressed once, as aria-pressed, and everything visual
+   hangs off it. Before this the card heart carried two conflicting sets of
+   opacity utilities — `opacity-100` when saved, then `sm:opacity-0` regardless
+   — so a saved product's heart vanished on desktop until you hovered it. */
+
+.wishlist-heart {
+    opacity: 0;
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.group:hover .wishlist-heart,
+.group:focus-within .wishlist-heart,
+.wishlist-heart:focus-visible,
+.wishlist-heart[aria-pressed="true"] {
+    opacity: 1;
+}
+
+/* No hover on a touch screen, so the heart has to be there from the start. */
+@media (hover: none) {
+    .wishlist-heart { opacity: 1; }
+}
+
+/* Targeted as a bare descendant `svg` rather than through a data attribute on
+   the icon, because x-lucide-icon drops every attribute it is handed: its
+   `preg_replace('/^<svg /', ...)` never matches, since the vendored files open
+   with a license comment and put no space after `<svg`. Worth fixing at source
+   one day — it is also why `text-pink fill-current` on the saved heart, and the
+   size utilities on every other icon, currently do nothing. */
+[data-wishlist-toggle] svg {
+    transform-origin: center;
+    transition: color 160ms ease, fill 160ms ease;
+}
+
+[data-wishlist-toggle][aria-pressed="true"] svg {
+    color: #FA0467;
+    fill: currentColor;
+}
+
+[data-wishlist-toggle][aria-busy="true"] {
+    opacity: 0.65;
+}
+
+[data-wishlist-toggle].is-popped svg {
+    animation: heart-pop 460ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes heart-pop {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.35); }
+    70% { transform: scale(0.92); }
+    100% { transform: scale(1); }
+}
+
+/* ---------- 15. Add-to-bag confirmation and in-flight state ---------- */
+
+.btn[aria-busy="true"] {
+    opacity: 0.75;
+}
+
+.btn.is-confirmed {
+    background-color: #0E9F6E;
+    border-color: #0E9F6E;
+    color: #fff;
+}
+
+/* ---------- 16. Rows and cards leaving the page ----------
+   Cart lines and wishlist cards removed over AJAX, rather than blinking out. */
+
+.cart-row.is-removing,
+[data-product-card].is-removing {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+
+[data-product-card].is-removing {
+    transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cart-row.is-removing,
+    [data-product-card].is-removing { transition: none; }
+    .count-badge.is-bumped,
+    [data-wishlist-toggle].is-popped svg { animation: none; }
+}
+
+/* ---------- 17. Checkout: shipping method list ----------
+   Twelve Royal Mail services, so this is built as one card of hairline-
+   separated rows rather than twelve outlined boxes. Mobile first: the base
+   rules are the phone layout and the only thing that changes higher up is a
+   little more breathing room.
+
+   The whole row is the <label>, so the tap target is the full width rather
+   than the radio itself — the single biggest usability win on a list this
+   long. Rows are 3.25rem minimum, comfortably past the 44px floor. */
+
+.shipping-options > .shipping-option + .shipping-option {
+    border-top: 1px solid #EADFE4;
+}
+
+.shipping-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.25rem;
+    padding: 0.75rem 0.875rem;
+    cursor: pointer;
+    background: #fff;
+    transition: background-color 150ms ease;
+}
+
+.shipping-option:hover { background: #FDFAFB; }
+
+.shipping-option.is-selected { background: #FFF0F6; }
+
+/* Keyboard focus has to be visible on the row, not just the radio. */
+.shipping-option:focus-within {
+    outline: 2px solid #FA0467;
+    outline-offset: -2px;
+}
+
+.shipping-option-radio {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* min-width:0 lets a long name wrap instead of forcing the row wider than
+   the viewport — "Guaranteed by 9am with Saturday" at 320px is the case
+   this exists for. */
+.shipping-option-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    color: #14060E;
+    overflow-wrap: anywhere;
+}
+
+/* tabular-nums keeps the prices in a straight column even as they wrap. */
+.shipping-option-price {
+    flex: 0 0 auto;
+    font-family: "Space Grotesk", ui-monospace, monospace;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .shipping-option { padding: 0.875rem 1rem; gap: 0.875rem; }
+    .shipping-option-name { font-size: 0.9375rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shipping-option { transition: none; }
+}
